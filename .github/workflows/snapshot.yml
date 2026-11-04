@@ -1,0 +1,39 @@
+name: Build data snapshot
+
+# Downloads O*NET 30.0 and the Anthropic Economic Index (June 2026) on GitHub's servers and
+# rebuilds data/onet.json. Runs by hand, or when the builder changes. Commits only if the result changed.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - scripts/make_snapshot.py
+      - .github/workflows/snapshot.yml
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download
+        run: |
+          UA="onet-task-mapper snapshot (github.com/henfredpietersen/onet-task-mapper)"
+          curl -fsSL --retry 3 -A "$UA" -o onet.zip https://www.onetcenter.org/dl_files/database/db_30_0_text.zip
+          curl -fsSL --retry 3 -A "$UA" -o aei.csv "https://huggingface.co/datasets/Anthropic/EconomicIndex/resolve/main/release_2026_06_26/data/aei_claude_ai_2026-06-26.csv"
+          ls -l onet.zip aei.csv
+      - name: Build
+        run: python scripts/make_snapshot.py --onet onet.zip --aei aei.csv
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/onet.json
+          if git diff --cached --quiet; then echo "Snapshot unchanged"; exit 0; fi
+          git commit -m "Rebuild data snapshot (O*NET 30.0 + Economic Index June 2026)"
+          git push
