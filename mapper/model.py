@@ -10,8 +10,9 @@ Standard library only, so the same file runs in the browser (Pyodide) and in CI.
   for May 2026: the share of Claude.ai conversations matched to that task, worldwide and in
   South Africa, and how those conversations split between automation and augmentation.
   A task with no figure wasn't published (too few conversations), which is not the same as zero.
-- If you paste a job ad, each task is also checked against the ad's sentences, so you can see
-  which of the occupation's tasks the ad actually asks for.
+- If you paste a job ad, each task is also checked against the ad's clauses (split on full stops,
+  commas, semicolons and "and"). A task counts as in the ad if a clause shares at least two words
+  with it and matches it at least AD_MATCH well, so you can see which tasks the ad asks for.
 
 Usage shares describe how people use Claude. They say nothing about job risk.
 """
@@ -98,7 +99,8 @@ class Mapper:
 
     def tasks(self, i: int, ad_text: str = "") -> dict:
         o = self.occ[i]
-        sentences = [s for s in re.split(r"(?<=[.!?;:])\s+|\n+|•", ad_text or "") if len(words(s)) >= 2]
+        # compare tasks with clauses, not whole sentences: ads pack several duties into one sentence
+        sentences = [s for s in re.split(r"(?<=[.!?;:,])\s+|\n+|•|\s+and\s+", ad_text or "") if len(words(s)) >= 2]
         idf = self.content.idf
         sent_vecs = [(s.strip(), _vec(words(s), idf)) for s in sentences]
         rows = []
@@ -108,6 +110,8 @@ class Mapper:
             if sent_vecs:
                 tv = _vec(words(text), idf)
                 for s, sv in sent_vecs:
+                    if len(set(tv) & set(sv)) < 2:  # one shared word ("writer", "billing") isn't enough
+                        continue
                     sim = sum(w * sv.get(t, 0.0) for t, w in tv.items())
                     if sim > best:
                         best, best_s = sim, s

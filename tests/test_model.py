@@ -41,6 +41,17 @@ def test_tasks_keep_published_zero_and_missing_apart():
     assert [r["id"] for r in t["tasks"]] == [1, 3, 2]  # highest share first, unpublished last
 
 
+def test_one_shared_word_is_not_a_match():
+    t = mapper().tasks(0, "Invoices. Love dogs.")
+    assert t["n_in_ad"] == 0
+
+
+def test_ad_clauses_split_on_commas_and_and():
+    t = mapper().tasks(0, "Duties: reconcile bank statements, prepare customer invoices and answer phones politely.")
+    by_id = {r["id"]: r for r in t["tasks"]}
+    assert by_id[1]["in_ad"] and by_id[2]["in_ad"]
+
+
 def test_ad_sentences_mark_matching_tasks():
     t = mapper().tasks(0, "You will reconcile bank statements every month. You must love dogs.")
     by_id = {r["id"]: r for r in t["tasks"]}

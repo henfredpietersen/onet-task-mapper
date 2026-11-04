@@ -27,7 +27,7 @@ Most misses land on a neighbouring occupation ("Advanced Practice Nurse" → Nur
 
 - **Matching.** TF-IDF word matching on two fields: the title (official title plus alternate titles) and the content (description plus every task statement). Score = 0.7 × title + 0.3 × content. The 0.7 was picked on the tuning half (`scripts/tune.py`): it gave the best top-three rate there.
 - **Tasks.** The chosen occupation's tasks are listed with the Index's figures for May 2026, highest share first.
-- **Job ads.** Each task is compared with each sentence of a pasted ad; a task counts as "in your ad" if a sentence matches it closely enough. It shows the matching sentence.
+- **Job ads.** A pasted ad is split into clauses (on full stops, commas, semicolons and "and"), and each task is compared with each clause. A task counts as "in your ad" if a clause shares at least two words with it and matches it closely enough; the page shows that clause. One shared word ("billing", "writer") isn't enough, so it errs towards missing a task rather than claiming one.
 
 ## The usage numbers
 
@@ -52,7 +52,7 @@ From the [Anthropic Economic Index](https://www.anthropic.com/economic-index) re
 ## Run it
 
 ```bash
-python -m pytest -q                     # 9 tests, standard library + pytest
+python -m pytest -q                     # 11 tests, standard library + pytest
 python scripts/tune.py                  # how the title weight was picked (tuning half only)
 python web/build.py                     # rebuild docs/demo.js after changing mapper/ or web/
 python -m http.server -d . 8000         # then open http://localhost:8000/docs/demo.html
@@ -60,7 +60,7 @@ python -m http.server -d . 8000         # then open http://localhost:8000/docs/d
 
 ## What was tested
 
-- `tests/test_model.py`: plurals fold and job-ad filler words are dropped; search finds occupations by title and alternate title; published-zero and not-published stay different and sort correctly; ad sentences mark the right tasks; the split is stable.
+- `tests/test_model.py`: plurals fold and job-ad filler words are dropped; search finds occupations by title and alternate title; published-zero and not-published stay different and sort correctly; ad clauses mark the right tasks and one shared word isn't enough; the split is stable.
 - `tests/test_snapshot_and_page.py`: every Index task exists in O*NET 30.0, shares add up sensibly, held-out titles really are kept out of the title list, a fresh run reproduces every number in this README, the published page embeds the current code, and the page's calls work.
 - I also ran the page's code under Pyodide 0.26.4 (the version the page loads) and got the same scores.
 

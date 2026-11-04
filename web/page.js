@@ -155,7 +155,7 @@
 
       "<section class='step'><div class='num'>4</div><h2>What this isn't</h2><div class='card'><ul class='plain'>" +
       "<li>Word matching, not understanding. A job title O*NET doesn't know (like most “AI” titles) lands on the closest older occupation.</li>" +
-      "<li>“In the ad” means a sentence in the ad shares enough words with the task. It will miss tasks described in different words.</li>" +
+      "<li>“In your ad” means a clause of the ad shares at least two words with the task and matches it closely. It errs towards missing tasks described in other words rather than claiming ones that aren't there.</li>" +
       "<li>The usage data covers one month of Claude.ai conversations. Other AI tools, and other months, could look different.</li>" +
       "</ul></div></section>" +
 
