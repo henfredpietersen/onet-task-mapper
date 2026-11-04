@@ -30,7 +30,11 @@
     });
   }
   function $(sel) { return root.querySelector(sel); }
-  function pct(x, dp) { return x == null ? "–" : (100 * x).toFixed(dp == null ? 1 : dp) + "%"; }
+  function pct(x, dp) {  // round half up, like the README (0.6515 -> 65.2%, not 65.1%)
+    if (x == null) return "–";
+    var d = dp == null ? 1 : dp, f = Math.pow(10, d);
+    return (Math.round(100 * x * f + 1e-9) / f).toFixed(d) + "%";
+  }
   function share(x) { return x == null ? "<span class='dimc'>not published</span>" : x === 0 ? "under 0.005%" : x.toFixed(2) + "%"; }
   function num(x) { return Number(x).toLocaleString("en-US"); }
 
